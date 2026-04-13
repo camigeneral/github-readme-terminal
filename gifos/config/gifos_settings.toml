@@ -3,9 +3,9 @@ debug = false
 cursor = "_"
 show_cursor = true
 blink_cursor = true
-user_name = "x0rzavi" # for prompt
+user_name = "camigeneral" # for prompt
 fps = 15
-color_scheme = "yoru"
+color_scheme = "space-invaders"
 loop_count = 0 # infinite loop
 
 [files]

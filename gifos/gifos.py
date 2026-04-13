@@ -136,7 +136,7 @@ class Terminal:
             gifos_settings.get("general", {}).get("user_name") or "x0rzavi"
         )
         self.__prompt = (
-            f"\x1b[0;91m{self.__user_name}\x1b[0m@\x1b[0;93mgifos ~> \x1b[0m"
+            f"\x1b[0;93m{self.__user_name}@penguin\x1b[0m\x1b[0;97m$ \x1b[0m"
         )
         self.__frame = self.__gen_frame()
 
@@ -383,7 +383,7 @@ class Terminal:
         self.__frame_count += 1
         file_name = frame_base_name + str(self.__frame_count) + ".png"
         frame.save(frame_folder_name + "/" + file_name, "PNG")
-        print(f"INFO: Generated frame #{self.__frame_count}")  # debug
+        # print(f"INFO: Generated frame #{self.__frame_count}")  # debug
         return frame
 
     def save_frame(self, base_file_name: str):

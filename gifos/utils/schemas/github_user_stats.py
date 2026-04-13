@@ -31,6 +31,7 @@ class GithubUserStats:
         "total_stargazers",
         "total_issues",
         "total_commits_all_time",
+        "total_commits_last_365",
         "total_commits_last_year",
         "total_pull_requests_made",
         "total_pull_requests_merged",
@@ -39,12 +40,16 @@ class GithubUserStats:
         "total_repo_contributions",
         "languages_sorted",
         "user_rank",
+        "current_streak",
+        "longest_streak",
+        "total_contributions"
     ]
     account_name: str
     total_followers: int
     total_stargazers: int
     total_issues: int
     total_commits_all_time: int
+    total_commits_last_365: int
     total_commits_last_year: int
     total_pull_requests_made: int
     total_pull_requests_merged: int
@@ -53,3 +58,6 @@ class GithubUserStats:
     total_repo_contributions: int
     languages_sorted: list
     user_rank: GithubUserRank
+    current_streak: int
+    longest_streak: int
+    total_contributions: int

@@ -11,6 +11,7 @@ import requests
 import sys
 
 from dotenv import load_dotenv
+from datetime import datetime, timedelta, timezone
 
 from gifos.utils.calc_github_rank import calc_github_rank
 from gifos.utils.schemas.github_user_stats import GithubUserStats
@@ -213,6 +214,39 @@ def fetch_total_commits(user_name: str) -> int:
         return None
 
 
+def fetch_commits_last_365(user_name: str) -> int:
+    from_date = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    
+    query = """
+    query commitsLast365($user_name: String!, $from_date: DateTime!) {
+        user(login: $user_name) {
+            contributionsCollection(from: $from_date) {
+                totalCommitContributions
+                restrictedContributionsCount
+            }
+        }
+    }
+    """
+    headers = {"Authorization": f"bearer {GITHUB_TOKEN}"}
+    variables = {"user_name": user_name, "from_date": from_date}
+    
+    response = requests.post(
+        GRAPHQL_ENDPOINT,
+        json={"query": query, "variables": variables},
+        headers=headers,
+    )
+    if response.status_code == 200:
+        json_obj = response.json()
+        if "errors" in json_obj:
+            print(f"ERROR: {json_obj['errors']}")
+            return None
+        collection = json_obj["data"]["user"]["contributionsCollection"]
+        return collection["totalCommitContributions"] + collection["restrictedContributionsCount"]
+    else:
+        print(f"ERROR: {response.status_code}")
+        return None
+
+
 def fetch_github_stats(
     user_name: str, ignore_repos: list = None, include_all_commits: bool = False
 ) -> GithubUserStats:
@@ -273,6 +307,7 @@ def fetch_github_stats(
             break
 
     total_commits_all_time = fetch_total_commits(user_name)  # fetch only once
+    total_commits_last_365 = fetch_commits_last_365(user_name)
     total_languages_size = sum(languages_dict.values())
     languages_percentage = {
         language: round((size / total_languages_size) * 100, 2)
@@ -297,12 +332,18 @@ def fetch_github_stats(
         else:
             pull_requests_merge_percentage = 0
 
+        streak_data = fetch_stats_external(user_name)
+
         user_details = GithubUserStats(
             account_name=user_stats["name"],
+            current_streak=streak_data["current_streak"],
+            longest_streak=streak_data["longest_streak"],
+            total_contributions=streak_data["total_contributions"],
             total_followers=user_stats["followers"]["totalCount"],
             total_stargazers=total_stargazers,
             total_issues=user_stats["issues"]["totalCount"],
             total_commits_all_time=total_commits_all_time,
+            total_commits_last_365=total_commits_last_365,
             total_commits_last_year=(
                 user_stats["contributionsCollection"]["restrictedContributionsCount"]
                 + user_stats["contributionsCollection"]["totalCommitContributions"]
@@ -338,4 +379,19 @@ def fetch_github_stats(
         )
         return user_details
     else:
+        return None
+
+
+def fetch_stats_external(user_name: str) -> dict:
+    url = f"https://streak-stats.demolab.com/?user={user_name}&type=json"
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        return {
+            "current_streak": data["currentStreak"]["length"],
+            "longest_streak": data["longestStreak"]["length"],
+            "total_contributions": data["totalContributions"],
+        }
+    else:
+        print(f"ERROR: {response.status_code}")
         return None
